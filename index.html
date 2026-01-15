@@ -1,60 +1,84 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Flappy Fikn</title>
+
+  <!-- MOBİL KRİTİK -->
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
   <style>
-    body {
+    * {
       margin: 0;
-      background: #0f172a;
+      padding: 0;
+      box-sizing: border-box;
+      touch-action: manipulation;
+    }
+
+    body {
+      background: #020617;
       display: flex;
       justify-content: center;
       align-items: center;
-      height: 100vh;
-      color: white;
-      font-family: Arial, sans-serif;
+      height: 100dvh;
+      overflow: hidden;
     }
+
     canvas {
       background: linear-gradient(#38bdf8, #e0f2fe);
+      width: 100vw;
+      max-width: 420px;
+      height: 100dvh;
+      max-height: 720px;
       border-radius: 12px;
     }
   </style>
 </head>
 <body>
 
-<canvas id="game" width="400" height="600"></canvas>
+<canvas id="game"></canvas>
 
 <script>
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
+// CANVAS GERÇEK BOYUT
+function resize() {
+  canvas.width = 420;
+  canvas.height = 720;
+}
+resize();
+
+// OYUN DEĞİŞKENLERİ
 let gravity = 0.5;
-let lift = -8;
+let lift = -9;
 let velocity = 0;
 let score = 0;
 let gameOver = false;
 
-// FIKN görseli
+// GÖRSEL
 const birdImg = new Image();
 birdImg.src = "fikn.png";
 
+// OYUNCU
 let bird = {
-  x: 80,
-  y: 250,
-  w: 40,
-  h: 40
+  x: 90,
+  y: 300,
+  w: 42,
+  h: 42
 };
 
 let pipes = [];
-let pipeWidth = 60;
-let gap = 150;
+let pipeWidth = 64;
+let gap = 170;
 
+// BORU
 function addPipe() {
-  let topHeight = Math.random() * 250 + 50;
+  let top = Math.random() * 300 + 60;
   pipes.push({
     x: canvas.width,
-    top: topHeight,
-    bottom: canvas.height - topHeight - gap,
+    top,
+    bottom: canvas.height - top - gap,
     passed: false
   });
 }
@@ -63,28 +87,28 @@ function resetGame() {
   pipes = [];
   score = 0;
   velocity = 0;
-  bird.y = 250;
+  bird.y = 300;
   gameOver = false;
 }
 
+// DOKUNMA + KLAVYE
+function flap() {
+  if (gameOver) resetGame();
+  velocity = lift;
+}
+
 document.addEventListener("keydown", e => {
-  if (e.code === "Space") {
-    if (gameOver) {
-      resetGame();
-    } else {
-      velocity = lift;
-    }
-  }
+  if (e.code === "Space") flap();
 });
 
-canvas.addEventListener("click", () => {
-  if (gameOver) {
-    resetGame();
-  } else {
-    velocity = lift;
-  }
-});
+canvas.addEventListener("touchstart", e => {
+  e.preventDefault();
+  flap();
+}, { passive: false });
 
+canvas.addEventListener("mousedown", flap);
+
+// OYUN
 function update() {
   if (gameOver) return;
 
@@ -96,9 +120,8 @@ function update() {
   }
 
   pipes.forEach(pipe => {
-    pipe.x -= 2;
+    pipe.x -= 2.5;
 
-    // çarpışma
     if (
       bird.x < pipe.x + pipeWidth &&
       bird.x + bird.w > pipe.x &&
@@ -113,47 +136,39 @@ function update() {
     }
   });
 
-  pipes = pipes.filter(pipe => pipe.x + pipeWidth > 0);
+  pipes = pipes.filter(p => p.x + pipeWidth > 0);
 }
 
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // kuş yerine FIKN
   ctx.drawImage(birdImg, bird.x, bird.y, bird.w, bird.h);
 
-  // borular
   ctx.fillStyle = "#16a34a";
-  pipes.forEach(pipe => {
-    ctx.fillRect(pipe.x, 0, pipeWidth, pipe.top);
-    ctx.fillRect(
-      pipe.x,
-      canvas.height - pipe.bottom,
-      pipeWidth,
-      pipe.bottom
-    );
+  pipes.forEach(p => {
+    ctx.fillRect(p.x, 0, pipeWidth, p.top);
+    ctx.fillRect(p.x, canvas.height - p.bottom, pipeWidth, p.bottom);
   });
 
-  // skor
-  ctx.fillStyle = "#0f172a";
-  ctx.font = "24px Arial";
+  ctx.fillStyle = "#020617";
+  ctx.font = "26px Arial";
   ctx.fillText("Skor: " + score, 20, 40);
 
   if (gameOver) {
     ctx.fillStyle = "rgba(0,0,0,0.6)";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = "white";
-    ctx.font = "28px Arial";
-    ctx.fillText("Oyun Bitti", 120, 260);
-    ctx.font = "18px Arial";
-    ctx.fillText("Tıkla veya SPACE", 110, 300);
+    ctx.font = "32px Arial";
+    ctx.fillText("Oyun Bitti", 120, 330);
+    ctx.font = "20px Arial";
+    ctx.fillText("Dokun / SPACE", 120, 370);
   }
 }
 
 let frame = 0;
 function loop() {
   frame++;
-  if (frame % 90 === 0 && !gameOver) addPipe();
+  if (frame % 85 === 0 && !gameOver) addPipe();
   update();
   draw();
   requestAnimationFrame(loop);
