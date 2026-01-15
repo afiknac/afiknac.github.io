@@ -1,23 +1,166 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8">
-  <title>Tam Ekran Resim</title>
+  <meta charset="UTF-8" />
+  <title>Flappy Fikn</title>
   <style>
-    body, html {
+    body {
       margin: 0;
-      padding: 0;
-      height: 100%;
-      width: 100%;
+      background: #0f172a;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      color: white;
+      font-family: Arial, sans-serif;
     }
-    img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover; /* Resmi kırpmadan/düzgün şekilde doldurur */
+    canvas {
+      background: linear-gradient(#38bdf8, #e0f2fe);
+      border-radius: 12px;
     }
   </style>
 </head>
 <body>
-  <img src="resim.jpg" alt="Tam ekran resim">
+
+<canvas id="game" width="400" height="600"></canvas>
+
+<script>
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+let gravity = 0.5;
+let lift = -8;
+let velocity = 0;
+let score = 0;
+let gameOver = false;
+
+// FIKN görseli
+const birdImg = new Image();
+birdImg.src = "fikn.png";
+
+let bird = {
+  x: 80,
+  y: 250,
+  w: 40,
+  h: 40
+};
+
+let pipes = [];
+let pipeWidth = 60;
+let gap = 150;
+
+function addPipe() {
+  let topHeight = Math.random() * 250 + 50;
+  pipes.push({
+    x: canvas.width,
+    top: topHeight,
+    bottom: canvas.height - topHeight - gap,
+    passed: false
+  });
+}
+
+function resetGame() {
+  pipes = [];
+  score = 0;
+  velocity = 0;
+  bird.y = 250;
+  gameOver = false;
+}
+
+document.addEventListener("keydown", e => {
+  if (e.code === "Space") {
+    if (gameOver) {
+      resetGame();
+    } else {
+      velocity = lift;
+    }
+  }
+});
+
+canvas.addEventListener("click", () => {
+  if (gameOver) {
+    resetGame();
+  } else {
+    velocity = lift;
+  }
+});
+
+function update() {
+  if (gameOver) return;
+
+  velocity += gravity;
+  bird.y += velocity;
+
+  if (bird.y + bird.h > canvas.height || bird.y < 0) {
+    gameOver = true;
+  }
+
+  pipes.forEach(pipe => {
+    pipe.x -= 2;
+
+    // çarpışma
+    if (
+      bird.x < pipe.x + pipeWidth &&
+      bird.x + bird.w > pipe.x &&
+      (bird.y < pipe.top || bird.y + bird.h > canvas.height - pipe.bottom)
+    ) {
+      gameOver = true;
+    }
+
+    if (!pipe.passed && pipe.x + pipeWidth < bird.x) {
+      score++;
+      pipe.passed = true;
+    }
+  });
+
+  pipes = pipes.filter(pipe => pipe.x + pipeWidth > 0);
+}
+
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // kuş yerine FIKN
+  ctx.drawImage(birdImg, bird.x, bird.y, bird.w, bird.h);
+
+  // borular
+  ctx.fillStyle = "#16a34a";
+  pipes.forEach(pipe => {
+    ctx.fillRect(pipe.x, 0, pipeWidth, pipe.top);
+    ctx.fillRect(
+      pipe.x,
+      canvas.height - pipe.bottom,
+      pipeWidth,
+      pipe.bottom
+    );
+  });
+
+  // skor
+  ctx.fillStyle = "#0f172a";
+  ctx.font = "24px Arial";
+  ctx.fillText("Skor: " + score, 20, 40);
+
+  if (gameOver) {
+    ctx.fillStyle = "rgba(0,0,0,0.6)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "white";
+    ctx.font = "28px Arial";
+    ctx.fillText("Oyun Bitti", 120, 260);
+    ctx.font = "18px Arial";
+    ctx.fillText("Tıkla veya SPACE", 110, 300);
+  }
+}
+
+let frame = 0;
+function loop() {
+  frame++;
+  if (frame % 90 === 0 && !gameOver) addPipe();
+  update();
+  draw();
+  requestAnimationFrame(loop);
+}
+
+loop();
+</script>
+
 </body>
 </html>
