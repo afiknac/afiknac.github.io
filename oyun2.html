@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<title>FiknDino</title>
+
+<style>
+  body {
+    margin: 0;
+    background: #f7f7f7;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    font-family: Arial, sans-serif;
+  }
+
+  #game {
+    position: relative;
+    width: 800px;
+    height: 200px;
+    background: #fff;
+    border: 2px solid #555;
+    overflow: hidden;
+  }
+
+  #dino {
+    position: absolute;
+    bottom: 0;
+    left: 50px;
+    width: 60px;
+    height: 60px;
+    background: url("fikndino.jpg") no-repeat center/contain;
+  }
+
+  .jump {
+    animation: jump 0.6s ease-out;
+  }
+
+  @keyframes jump {
+    0%   { bottom: 0; }
+    50%  { bottom: 90px; }
+    100% { bottom: 0; }
+  }
+
+  #cactus {
+    position: absolute;
+    bottom: 0;
+    right: -40px;
+    width: 30px;
+    height: 50px;
+    background: #333;
+    animation: cactusMove 1.6s infinite linear;
+  }
+
+  @keyframes cactusMove {
+    0% { right: -40px; }
+    100% { right: 840px; }
+  }
+
+  #score {
+    position: absolute;
+    top: 5px;
+    right: 10px;
+    font-size: 16px;
+  }
+
+  #info {
+    position: absolute;
+    top: 80px;
+    width: 100%;
+    text-align: center;
+    color: #777;
+  }
+</style>
+</head>
+
+<body>
+
+<div id="game">
+  <div id="score">Skor: 0</div>
+  <div id="info">Boşluk (SPACE) ile zıpla</div>
+  <div id="dino"></div>
+  <div id="cactus"></div>
+</div>
+
+<script>
+  const dino = document.getElementById("dino");
+  const cactus = document.getElementById("cactus");
+  const scoreText = document.getElementById("score");
+
+  let jumping = false;
+  let score = 0;
+
+  document.addEventListener("keydown", e => {
+    if (e.code === "Space" && !jumping) {
+      jump();
+    }
+  });
+
+  function jump() {
+    jumping = true;
+    dino.classList.add("jump");
+    setTimeout(() => {
+      dino.classList.remove("jump");
+      jumping = false;
+    }, 600);
+  }
+
+  setInterval(() => {
+    score++;
+    scoreText.innerText = "Skor: " + score;
+
+    const dinoBottom = parseInt(getComputedStyle(dino).getPropertyValue("bottom"));
+    const cactusRight = parseInt(getComputedStyle(cactus).getPropertyValue("right"));
+
+    if (cactusRight > 690 && cactusRight < 740 && dinoBottom < 40) {
+      alert("Oyun Bitti!\nSkor: " + score);
+      location.reload();
+    }
+  }, 100);
+</script>
+
+</body>
+</html>
